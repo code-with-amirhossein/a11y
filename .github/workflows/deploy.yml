@@ -52,7 +52,7 @@ jobs:
         uses: google/wireit@setup-github-actions-caching/v2
 
       - name: "🧱 build docs"
-        run: pnpm build:docs
+        run: pnpm docs:build
 
       - name: "🗄️ upload pages artifact"
         uses: actions/upload-pages-artifact@v3
