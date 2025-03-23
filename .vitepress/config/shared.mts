@@ -1,0 +1,16 @@
+import { defineConfig } from 'vitepress'
+export const shared = defineConfig({
+  rewrites: {
+    'en/:rest*': ':rest*'
+  },
+  lastUpdated: true,
+  cleanUrls: true,
+  metaChunk: true,
+  base: '/a11y',
+
+  themeConfig: {
+    socialLinks: [
+        { icon: 'github', link: 'https://github.com/amir78729' }
+      ],
+  },
+})
