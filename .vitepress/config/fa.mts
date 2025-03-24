@@ -110,5 +110,31 @@ function sidebar(): DefaultTheme.SidebarItem[] {
         },
       ],
     },
+    {
+      text: "روابط کاربری accessible",
+      base: "/topics/accessible-naming-screen-readers",
+      items: [
+        {
+          text: "ARIA و محاسبه نام accessible",
+          link: "/ARIA-accessible-name-computation",
+        },
+        {
+          text: "درخت accessibility",
+          link: "/the-accessibility-tree",
+        },
+        {
+          text: "تست راهکارهای ARIA",
+          link: "/testing-a-solution",
+        },
+        {
+          text: "تجربه بصری و غیر بصری",
+          link: "/visual-nonvisual-experience",
+        },
+        {
+          text: "فرمان‌ها و حالت‌های تعامل در screen reader",
+          link: "/screen-reader-commands-interaction-modes",
+        },
+      ],
+    },
   ];
 }
