@@ -24,7 +24,7 @@ export const fa = defineConfig({
     outline: {
       label: "در این صفحه",
     },
-
+    
     lastUpdated: {
       text: "آخرین به‌روزرسانی‌",
       formatOptions: {
@@ -45,7 +45,12 @@ export const fa = defineConfig({
       title: "صفحه مورد نظر یافت نشد",
       code: "۴۰۴",
       quote:
-        "اما اگر جهت خود را تغییر ندهید و اگر ادامه دهید به دنبال چیزی که دنبال می‌کنید، ممکن است در نهایت به جایی که در حال رفتن به سمتش هستید، برسید.",
+        "",
+    },
+    editLink: {
+      pattern: "https://github.com/code-with-amirhossein/a11y/edit/main/:path",
+      text: 'ویرایش این صفحه در گیت‌هاب'
+    
     },
     siteTitle: "Accessibility",
   },
