@@ -47,7 +47,7 @@ export const fa = defineConfig({
       quote:
         "اما اگر جهت خود را تغییر ندهید و اگر ادامه دهید به دنبال چیزی که دنبال می‌کنید، ممکن است در نهایت به جایی که در حال رفتن به سمتش هستید، برسید.",
     },
-    siteTitle: "قابلیت دسترسی (accessibility)",
+    siteTitle: "Accessibility",
   },
 });
 
@@ -82,6 +82,10 @@ function sidebar(): DefaultTheme.SidebarItem[] {
           text: "Personaهای مرتبط با accessibility",
           link: "/persona",
         },
+        {
+          text: "تمرین",
+          link: "/excercise-1",
+        },
       ],
     },
     {
@@ -108,6 +112,10 @@ function sidebar(): DefaultTheme.SidebarItem[] {
           text: "چگونه یک کامپوننت UI را از نظر accessibility تست کنیم",
           link: "/how-to-test-components",
         },
+        // {
+        //   text: "تمرین: بهبود یک کامپوننت!",
+        //   link: "/excersice-2",
+        // },
       ],
     },
     {

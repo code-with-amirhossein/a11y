@@ -7,40 +7,37 @@
 <figure className="grid grid-cols-2 gap-6 py-2 item-start">
 
 ```tsx
-
 const Submit = () => {
-    const handleKeyDown = (event) => {
-        if (event.code === 'Space' || event.code === 'Enter') {
-            // do click stuff
-        }
-    };
+  const handleKeyDown = (event) => {
+    if (event.code === "Space" || event.code === "Enter") {
+      // do click stuff
+    }
+  };
 
-    return (
-        <div
-            onClick={handleClick}
-            onKeyDown={handleKeyDown}
-            role="button"
-            tabIndex="0"
-        >
-            Submit
-        </div>
-    )
-}
-
+  return (
+    <div
+      onClick={handleClick}
+      onKeyDown={handleKeyDown} // Add functionality for keyboard users // [!code highlight]
+      role="button" // Tell the screen readers that it's a button (it's NOT!) // [!code highlight]
+      tabIndex="0" // Make it focusable! // [!code highlight]
+    >
+      Submit
+    </div>
+  );
+};
 ```
-
 
 </figure>
 
 در key handler باید به‌طور شرطی منطق مورد نظر را هنگام فشردن کلید Space یا Enter اجرا کنید. و اگر دکمه‌ شما آیکونی است یا محتوای متنی ندارد، فراموش نکنید که یک نام قابل دسترس (احتمالاً با `aria-label`) به آن اختصاص دهید.
 
-استفاده از عنصر `button` بسیار ساده‌تر است. برای رسیدن به همان عملکرد و سطح دسترسی، تنها کافی است:
+استفاده از عنصر `button` بسیار ساده‌تر است. برای رسیدن به همان عملکرد و سطح دسترسی، تنها کافی است بگوییم:
 
 ```javascript
 <button onClick={handleClick}>Submit</button>
 ```
 
-همین. نیازی به تعیین role صریح، `tabIndex`، یا key handler ندارید (چون دکمه‌ها به‌صورت پیش‌فرض از طریق کیبورد فعال می‌شوند، بر خلاف DIVها).
+همین! نیازی به تعیین role صریح، `tabIndex`، یا key handler نداریم (چون دکمه‌ها به‌صورت پیش‌فرض از طریق کیبورد فعال می‌شوند، بر خلاف DIVها).
 
 ## مراقب دکمه‌های DIV باشید
 
@@ -48,6 +45,6 @@ const Submit = () => {
 
 تست با کیبورد را به بخشی از جریان کاری منظم خود تبدیل کنید و از دکمه‌های HTML استفاده کنید! مشکل به‌سادگی حل خواهد شد.
 
-## نکته‌ای درباره هوش مصنوعی
+<!-- ## نکته‌ای درباره هوش مصنوعی
 
-ما باید این مسئله (و سایر بخش‌های مرتبط با accessibility) را در مرحله توسعه، یعنی همان authoring، به‌طور جدی مدنظر قرار دهیم. نباید انتظار داشته باشیم Assistive Tech یا هوش مصنوعی این مشکلات را به‌جای ما حل کنند. چنین دیدگاهی بسیار خاص و وابسته به امکانات لوکس است، در حالی که بسیاری از افراد در سراسر جهان توانایی استفاده از فناوری‌های پیشرفته را ندارند. در عوض، می‌توانیم همین حالا UIهایی بسازیم که از نظر پایه‌ای accessible باشند — هم برای امروز و هم برای آینده.
+ما باید این مسئله (و سایر بخش‌های مرتبط با accessibility) را در مرحله توسعه، یعنی همان authoring، به‌طور جدی مدنظر قرار دهیم. نباید انتظار داشته باشیم Assistive Tech یا هوش مصنوعی این مشکلات را به‌جای ما حل کنند. چنین دیدگاهی بسیار خاص و وابسته به امکانات لوکس است، در حالی که بسیاری از افراد در سراسر جهان توانایی استفاده از فناوری‌های پیشرفته را ندارند. در عوض، می‌توانیم همین حالا UIهایی بسازیم که از نظر پایه‌ای accessible باشند — هم برای امروز و هم برای آینده. -->
