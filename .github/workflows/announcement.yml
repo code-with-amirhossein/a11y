@@ -11,21 +11,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract release notes
-        id: extract
-        run: |
-          echo "${{ github.event.pull_request.body }}" > pr_body.md
-
-          # Extract lines AFTER "# Releases" line
-          awk '/^# Releases/ {found=1; next} found' pr_body.md > release_notes.txt
-
-          # Save as-is to environment variable (no escaping needed inside ``` block)
-          {
-            echo "RELEASE_NOTES<<EOF"
-            cat release_notes.txt
-            echo "EOF"
-          } >> "$GITHUB_ENV"
-
       - name: Send Telegram Message
         uses: appleboy/telegram-action@master
         with:
@@ -33,11 +18,8 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: MarkdownV2
           message: |
-            ✅ *Release Merged to Main*
-            🔗 [PR \#${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
-            👤 Author: [${{ github.event.pull_request.user.login }}](https://github.com/${{ github.event.pull_request.user.login }})
-
-            📦 *Release Notes:*
-            ```
-            ${{ env.RELEASE_NOTES }}
-            ```
+            🚀 New Release for *[Design System](https://github.com/${{ github.repository }})*
+            
+            🔗 [View PR \#${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}](${{ github.event.pull_request.html_url }})
+            📦 [Releases](https://github.com/${{ github.repository }}/releases)
+          
