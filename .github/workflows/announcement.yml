@@ -1,13 +1,23 @@
-name: Notify Telegram on Release Merge
+name: 📣 Announcement
 
 on:
-  pull_request:
-    types: [closed]
-    branches: [main]
+  workflow_call:
+    inputs:
+      pr_title:
+        required: true
+        type: string
+      pr_number:
+        required: true
+        type: string
+      pr_url:
+        required: true
+        type: string
+      pr_body:
+        required: true
+        type: string
 
 jobs:
-  telegram:
-    if: github.event.pull_request.merged == true
+  telegram-announcement:
     runs-on: ubuntu-latest
 
     steps:
@@ -15,7 +25,7 @@ jobs:
         id: extract
         run: |
           REPO="https://github.com/${{ github.repository }}"
-          echo "${{ github.event.pull_request.body }}" > pr_body.md
+          echo "${{ inputs.pr_body }}" > pr_body.md
 
           # Extract all lines starting with '## '
           grep '^## ' pr_body.md | sed 's/^## //' > packages.txt
@@ -31,7 +41,6 @@ jobs:
             cat release_links.html
             echo "EOF"
           } >> "$GITHUB_ENV"
-          
 
       - name: Send Telegram Message
         uses: appleboy/telegram-action@master
@@ -41,9 +50,8 @@ jobs:
           format: html
           message: |
             🚀 <b><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></b> was just released!
+
+            📦 <b>Released Packages:</b>
             ${{ env.RELEASE_LINKS }}
-            
-            🔗 PR: <a href="${{ github.event.pull_request.html_url }}"><b>${{ github.event.pull_request.title }}</b>#${{ github.event.pull_request.number }}</a>
-            
-  
-            
+
+            🔗 PR: <a href="${{ inputs.pr_url }}"><b>${{ inputs.pr_title }}</b> #${{ inputs.pr_number }}</a>
