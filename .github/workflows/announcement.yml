@@ -14,18 +14,19 @@ jobs:
       - name: Extract Release Notes
         id: extract
         run: |
-          BODY="${{ github.event.pull_request.body }}"
+          # Save PR body to file
+          echo "${{ github.event.pull_request.body }}" > pr_body.md
           
           # Extract everything from "# Releases" onward
-          RELEASE_NOTES=$(echo "$BODY" | awk '/^# Releases/{flag=1} flag')
-      
-          # Sanitize: escape backticks (which break Telegram markdown code blocks)
-          RELEASE_NOTES="${RELEASE_NOTES//\`/\\\`}"
-      
-          # Write to environment variable safely
+          awk '/^# Releases/ {found=1} found' pr_body.md > release_notes.txt
+
+          # Escape backticks to keep Telegram Markdown happy
+          sed 's/`/\\`/g' release_notes.txt > sanitized_notes.txt
+
+          # Store in env variable
           {
             echo "RELEASE_NOTES<<EOF"
-            echo "$RELEASE_NOTES"
+            cat sanitized_notes.txt
             echo "EOF"
           } >> "$GITHUB_ENV"
 
