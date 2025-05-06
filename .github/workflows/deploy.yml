@@ -94,9 +94,14 @@ jobs:
         id: extract
         run: |
           REPO="https://github.com/${{ github.repository }}"
-          
-          # Match '## ' lines with optional leading spaces
-          grep '^[[:space:]]*## ' pr_body.md | sed 's/^[[:space:]]*## //' > packages.txt
+      
+          echo "🔍 PR body content:" && cat pr_body.md
+      
+          # Use grep with flexible spacing
+          grep -E '^\s*##\s+@' pr_body.md | sed -E 's/^\s*##\s+//' > packages.txt
+      
+          echo "🔍 Extracted packages:"
+          cat packages.txt
       
           if [ -s packages.txt ]; then
             while read -r line; do
