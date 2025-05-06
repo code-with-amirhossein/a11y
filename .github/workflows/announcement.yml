@@ -31,6 +31,7 @@ jobs:
             cat release_links.html
             echo "EOF"
           } >> "$GITHUB_ENV"
+          
 
       - name: Send Telegram Message
         uses: appleboy/telegram-action@master
