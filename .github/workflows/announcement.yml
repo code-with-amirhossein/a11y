@@ -11,21 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract and sanitize release notes
+      - name: Extract release notes
         id: extract
         run: |
           echo "${{ github.event.pull_request.body }}" > pr_body.md
 
-          # Extract lines AFTER "# Releases"
+          # Extract lines AFTER "# Releases" line
           awk '/^# Releases/ {found=1; next} found' pr_body.md > release_notes.txt
 
-          # Escape characters for Telegram MarkdownV2
-          sed -e 's/\([_*\[\]()~`>#+\-=|{}.!]\)/\\\1/g' release_notes.txt > sanitized_notes.txt
-
-          # Save sanitized text to env
+          # Save as-is to environment variable (no escaping needed inside ``` block)
           {
             echo "RELEASE_NOTES<<EOF"
-            cat sanitized_notes.txt
+            cat release_notes.txt
             echo "EOF"
           } >> "$GITHUB_ENV"
 
@@ -41,4 +38,6 @@ jobs:
             👤 Author: [${{ github.event.pull_request.user.login }}](https://github.com/${{ github.event.pull_request.user.login }})
 
             📦 *Release Notes:*
+            ```
+            ${{ env.RELEASE_NOTES }}
             ```
