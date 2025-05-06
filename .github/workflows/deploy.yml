@@ -1,15 +1,20 @@
 name: Deploy & Announce Release
 
 on:
+  # Runs on pushes to the `main` branch
   push:
     branches: [main]
+
+  # Allow manual triggering from the Actions tab
   workflow_dispatch:
 
+# Permissions needed for GitHub Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
+# Prevent overlapping deploys
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -21,7 +26,7 @@ jobs:
       - name: ☁️ Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 0  # Needed for full commit history (e.g. for changelogs)
 
       - name: 🔧 Setup pnpm
         uses: pnpm/action-setup@v3
@@ -46,20 +51,20 @@ jobs:
       - name: 🧱 Build docs
         run: pnpm docs:build
 
-      - name: 🗄️ Upload pages artifact
+      - name: 🗄️ Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .vitepress/dist
 
   deploy:
-    name: Deploy to GitHub Pages
+    name: 🚀 Deploy to GitHub Pages
     needs: build
     runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: 🚀 Deploy to GitHub Pages
+      - name: 🔄 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
@@ -68,36 +73,43 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - name: 🔍 Fetch latest merged PR via API
+      - name: 🔍 Fetch latest merged PR via GitHub API
         id: fetch_pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
+          # Fetch latest merged PR to main
           curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/$REPO/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=1" \
             -o pr.json
 
+          # Extract relevant fields
           PR_NUMBER=$(grep '"number":' pr.json | head -n 1 | awk '{print $2}' | tr -d ',')
           PR_TITLE=$(grep '"title":' pr.json | head -n 1 | cut -d ':' -f2- | sed 's/^ "//;s/",$//')
           PR_URL=$(grep '"html_url":' pr.json | head -n 1 | cut -d '"' -f4)
           sed -n '/"body":/,$p' pr.json | sed '1s/.*"body": "//; s/",$//' > pr_body.md
 
+          # Export to env
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
           echo "PR_URL=$PR_URL" >> $GITHUB_ENV
 
-      - name: 📦 Extract released packages
+      - name: 📦 Extract released packages from PR body
         id: extract
         run: |
           REPO="https://github.com/${{ github.repository }}"
+
+          # Extract lines starting with '## ' from PR body (i.e., package names)
           grep '^## ' pr_body.md | sed 's/^## //' > packages.txt
 
+          # Generate Telegram HTML links to each released package
           while read -r line; do
             ENCODED_TAG=$(printf "%s" "$line" | jq -sRr @uri)
             echo "  • <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
           done < packages.txt > release_links.html
 
+          # Export formatted list to env
           {
             echo "RELEASE_LINKS<<EOF"
             cat release_links.html
