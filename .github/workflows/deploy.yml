@@ -59,14 +59,18 @@ jobs:
         with:
           path: .vitepress/dist
 
-      - name: Post to a Slack channel
-        uses: slackapi/slack-github-action@v2.0.0
+      - name: send telegram message on push
+        uses: appleboy/telegram-action@master
         with:
-          method: chat.postMessage
-          token: ${{ secrets.SLACK_BOT_TOKEN }}
-          payload: |
-            channel: ${{ secrets.SLACK_CHANNEL_ID }}
-            text: "Greetings <@channel>!"
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ${{ github.actor }} created commit:
+            Commit message: ${{ github.event.commits[0].message }}
+            
+            Repository: ${{ github.repository }}
+            
+            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
 
   deploy:
     environment:
