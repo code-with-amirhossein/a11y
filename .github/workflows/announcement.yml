@@ -40,9 +40,9 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: html
           message: |
-            🚀 <b>New Release for <a href="https://github.com/${{ github.repository }}"><code>${{ github.repository }}</code></a>!</b>
+            🚀 <b>New Release for <a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a>!</b>
             
-            🔗 View PR: <a href="${{ github.event.pull_request.html_url }}"><b>${{ github.event.pull_request.title }}</b>#${{ github.event.pull_request.number }}</a>
+            🔗 PR: <a href="${{ github.event.pull_request.html_url }}"><b>${{ github.event.pull_request.title }}</b>#${{ github.event.pull_request.number }}</a>
             
             📦 <b>Released Packages:</b>
             ${{ env.RELEASE_LINKS }}
