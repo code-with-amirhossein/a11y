@@ -11,19 +11,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Extract Release Notes
+      - name: Extract and sanitize release notes
         id: extract
         run: |
-          # Save PR body to file
           echo "${{ github.event.pull_request.body }}" > pr_body.md
-          
-          # Extract everything from "# Releases" onward
+
+          # Extract lines from "# Releases" onward
           awk '/^# Releases/ {found=1} found' pr_body.md > release_notes.txt
 
-          # Escape backticks to keep Telegram Markdown happy
-          sed 's/`/\\`/g' release_notes.txt > sanitized_notes.txt
+          # Escape characters for Telegram MarkdownV2
+          sed -e 's/\([_*\[\]()~`>#+\-=|{}.!]\)/\\\1/g' release_notes.txt > sanitized_notes.txt
 
-          # Store in env variable
+          # Save sanitized text to env
           {
             echo "RELEASE_NOTES<<EOF"
             cat sanitized_notes.txt
@@ -35,12 +34,13 @@ jobs:
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: MarkdownV2
           message: |
-            ✅ **Release Merged to Main**
-            🔗 [PR #${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
+            ✅ *Release Merged to Main*
+            🔗 [PR \#${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
             👤 Author: [${{ github.event.pull_request.user.login }}](https://github.com/${{ github.event.pull_request.user.login }})
 
-            📦 **Release Notes:**
+            📦 *Release Notes:*
             ```
             ${{ env.RELEASE_NOTES }}
             ```
