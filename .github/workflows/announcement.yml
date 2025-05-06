@@ -41,7 +41,7 @@ jobs:
           message: |
             🚀 <b>New Release for <a href="https://github.com/${{ github.repository }}">Design System</a>!</b>
             
-            🔗 <a href="${{ github.event.pull_request.html_url }}">View PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}</a>
+            🔗 View PR: <a href="${{ github.event.pull_request.html_url }}"><b>${{ github.event.pull_request.title }}</b>#${{ github.event.pull_request.number }}</a>
             
             📦 <b>Released Packages:</b>
             ${{ env.RELEASE_LINKS }}
