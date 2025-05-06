@@ -15,6 +15,11 @@ on:
       pr_body:
         required: true
         type: string
+    secrets:
+      TELEGRAM_TOKEN:
+        required: true
+      TELEGRAM_TO:
+        required: true
 
 jobs:
   telegram-announcement:
