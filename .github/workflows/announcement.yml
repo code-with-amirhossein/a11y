@@ -1,0 +1,42 @@
+name: Notify Telegram on Release Merge
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+jobs:
+  telegram:
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Extract Release Notes
+        id: extract
+        run: |
+          BODY="${{ github.event.pull_request.body }}"
+          
+          # Extract from "# Releases" onward
+          RELEASE_NOTES=$(echo "$BODY" | awk '/^# Releases/{flag=1} flag')
+          
+          # Escape backticks to prevent breaking Telegram message
+          RELEASE_NOTES="${RELEASE_NOTES//\`/\\\`}"
+          
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Telegram Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          message: |
+            ✅ **Release Merged to Main**
+            🔗 [PR #${{ github.event.pull_request.number }}](${{ github.event.pull_request.html_url }})
+            👤 Author: [${{ github.event.pull_request.user.login }}](https://github.com/${{ github.event.pull_request.user.login }})
+
+            📦 **Release Notes:**
+            ```
+            ${{ env.RELEASE_NOTES }}
+            ```
