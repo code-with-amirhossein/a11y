@@ -95,10 +95,14 @@ jobs:
         run: |
           REPO="https://github.com/${{ github.repository }}"
       
-          echo "🔍 PR body content:" && cat pr_body.md
+          # Convert escaped newlines (\r\n or \n) into real newlines
+          sed 's/\\r\\n/\n/g; s/\\n/\n/g' pr_body.md > pr_body_cleaned.md
       
-          # Use grep with flexible spacing
-          grep -E '^\s*##\s+@' pr_body.md | sed -E 's/^\s*##\s+//' > packages.txt
+          echo "🔍 Cleaned PR body content:"
+          cat pr_body_cleaned.md
+      
+          # Extract lines starting with "## <package>@<version>"
+          grep -E '^\s*##\s+@' pr_body_cleaned.md | sed -E 's/^\s*##\s+//' > packages.txt
       
           echo "🔍 Extracted packages:"
           cat packages.txt
@@ -117,6 +121,7 @@ jobs:
             cat release_links.html
             echo "EOF"
           } >> "$GITHUB_ENV"
+
 
       - name: 💬 Send Telegram Message
         uses: appleboy/telegram-action@master
