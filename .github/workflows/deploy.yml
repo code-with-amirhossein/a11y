@@ -1,20 +1,16 @@
 name: Deploy & Announce Release
 
 on:
-  # Runs on pushes to the `main` branch
   push:
     branches: [main]
 
-  # Allow manual triggering from the Actions tab
   workflow_dispatch:
 
-# Permissions needed for GitHub Pages deployment
 permissions:
   contents: read
   pages: write
   id-token: write
 
-# Prevent overlapping deploys
 concurrency:
   group: pages
   cancel-in-progress: false
@@ -26,7 +22,7 @@ jobs:
       - name: ☁️ Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0  # Needed for full commit history (e.g. for changelogs)
+          fetch-depth: 0
 
       - name: 🔧 Setup pnpm
         uses: pnpm/action-setup@v3
@@ -79,18 +75,17 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           REPO: ${{ github.repository }}
         run: |
-          # Fetch latest merged PR to main
           curl -s -H "Authorization: token $GH_TOKEN" \
             "https://api.github.com/repos/$REPO/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=1" \
             -o pr.json
 
-          # Extract relevant fields
           PR_NUMBER=$(grep '"number":' pr.json | head -n 1 | awk '{print $2}' | tr -d ',')
           PR_TITLE=$(grep '"title":' pr.json | head -n 1 | cut -d ':' -f2- | sed 's/^ "//;s/",$//')
           PR_URL=$(grep '"html_url":' pr.json | head -n 1 | cut -d '"' -f4)
-          sed -n '/"body":/,$p' pr.json | sed '1s/.*"body": "//; s/",$//' > pr_body.md
+          PR_BODY=$(awk -F'"body": "' '{print $2}' pr.json | sed 's/",$//')
 
-          # Export to env
+          echo "$PR_BODY" > pr_body.md
+
           echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
           echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
           echo "PR_URL=$PR_URL" >> $GITHUB_ENV
@@ -99,17 +94,17 @@ jobs:
         id: extract
         run: |
           REPO="https://github.com/${{ github.repository }}"
-
-          # Extract lines starting with '## ' from PR body (i.e., package names)
           grep '^## ' pr_body.md | sed 's/^## //' > packages.txt
 
-          # Generate Telegram HTML links to each released package
-          while read -r line; do
-            ENCODED_TAG=$(printf "%s" "$line" | jq -sRr @uri)
-            echo "  • <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
-          done < packages.txt > release_links.html
+          if [ -s packages.txt ]; then
+            while read -r line; do
+              ENCODED_TAG=$(printf "%s" "$line" | jq -sRr @uri)
+              echo "  • <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
+            done < packages.txt > release_links.html
+          else
+            echo "  • No packages found." > release_links.html
+          fi
 
-          # Export formatted list to env
           {
             echo "RELEASE_LINKS<<EOF"
             cat release_links.html
@@ -123,7 +118,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: html
           message: |
-            🚀 <b><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></b> was just released!\n
-            📦 <b>Released Packages:</b>\n
-            ${{ env.RELEASE_LINKS }}\n
-            🔗 PR: <a href="${{ env.PR_URL }}"><b>${{ env.PR_TITLE }}</b> #${{ env.PR_NUMBER }}</a>
+            🚀 <b><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></b> was just released!
+            <b>Released Packages:</b>
+            ${{ env.RELEASE_LINKS }}
+            🔗 <a href="${{ env.PR_URL }}"><b>${{ env.PR_TITLE }}</b> #${{ env.PR_NUMBER }}</a>
