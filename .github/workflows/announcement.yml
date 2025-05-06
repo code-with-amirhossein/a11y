@@ -16,15 +16,18 @@ jobs:
         run: |
           BODY="${{ github.event.pull_request.body }}"
           
-          # Extract from "# Releases" onward
+          # Extract everything from "# Releases" onward
           RELEASE_NOTES=$(echo "$BODY" | awk '/^# Releases/{flag=1} flag')
-          
-          # Escape backticks to prevent breaking Telegram message
+      
+          # Sanitize: escape backticks (which break Telegram markdown code blocks)
           RELEASE_NOTES="${RELEASE_NOTES//\`/\\\`}"
-          
-          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
-          echo "$RELEASE_NOTES" >> $GITHUB_ENV
-          echo "EOF" >> $GITHUB_ENV
+      
+          # Write to environment variable safely
+          {
+            echo "RELEASE_NOTES<<EOF"
+            echo "$RELEASE_NOTES"
+            echo "EOF"
+          } >> "$GITHUB_ENV"
 
       - name: Send Telegram Message
         uses: appleboy/telegram-action@master
