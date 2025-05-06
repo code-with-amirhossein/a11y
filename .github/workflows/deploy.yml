@@ -74,3 +74,18 @@ jobs:
       - name: "🚀 deploy to github pages"
         id: deployment
         uses: actions/deploy-pages@v4
+
+
+  announcement:
+    name: 📣 Announcement
+    needs: build
+    uses: ./.github/workflows/announcement.yml
+    with:
+      pr_title: ${{ github.event.head_commit.message }}
+      pr_number: ${{ needs.changesets.outputs.pr }}
+      pr_url:
+        https://github.com/${{ github.repository }}/pull/${{
+        needs.changesets.outputs.pr }}
+      pr_body: |
+        ${{ github.event.head_commit.message }}
+
