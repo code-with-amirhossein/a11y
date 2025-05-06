@@ -1,17 +1,10 @@
-# Sample workflow for building and deploying a VitePress site to GitHub Pages
-#
-name: Deploy VitePress site to Pages
+name: Deploy & Announce Release
 
 on:
-  # Runs on pushes targeting the `main` branch. Change this to `master` if you're
-  # using the `master` branch as the default branch.
   push:
     branches: [main]
-
-  # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-# Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
   contents: read
   pages: write
@@ -25,80 +18,91 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - name: "☁️ checkout repository"
+      - name: ☁️ Checkout repository
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          
 
-
-      - name: "🔧 setup pnpm"
+      - name: 🔧 Setup pnpm
         uses: pnpm/action-setup@v3
         with:
           version: 9
 
-      - name: "🔧 setup node"
+      - name: 🔧 Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: "pnpm"
+          cache: pnpm
 
-      - name: "🔧 setup pages"
+      - name: 🔧 Setup GitHub Pages
         uses: actions/configure-pages@v4
 
-      - name: "📦 install dependencies"
+      - name: 📦 Install dependencies
         run: pnpm install
 
-      # Set up GitHub Actions caching for Wireit.
-      - name: "🔌 setup wireit cache"
+      - name: 🔌 Setup Wireit cache
         uses: google/wireit@setup-github-actions-caching/v2
 
-      - name: "🧱 build docs"
+      - name: 🧱 Build docs
         run: pnpm docs:build
 
-      - name: "🗄️ upload pages artifact"
+      - name: 🗄️ Upload pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: .vitepress/dist
 
-
-
   deploy:
+    name: Deploy to GitHub Pages
+    needs: build
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    needs: build
-    runs-on: ubuntu-latest
-    name: Deploy
     steps:
-      - name: "🚀 deploy to github pages"
+      - name: 🚀 Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
 
-
-  telegram-announcement:
-    name: 📣 Announcement on Telegram
+  telegram:
+    name: 📣 Announce on Telegram
     needs: build
     runs-on: ubuntu-latest
     steps:
+      - name: 🔍 Fetch latest merged PR via API
+        id: fetch_pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+        run: |
+          curl -s -H "Authorization: token $GH_TOKEN" \
+            "https://api.github.com/repos/$REPO/pulls?state=closed&base=main&sort=updated&direction=desc&per_page=1" \
+            -o pr.json
+
+          PR_NUMBER=$(grep '"number":' pr.json | head -n 1 | awk '{print $2}' | tr -d ',')
+          PR_TITLE=$(grep '"title":' pr.json | head -n 1 | cut -d ':' -f2- | sed 's/^ "//;s/",$//')
+          PR_URL=$(grep '"html_url":' pr.json | head -n 1 | cut -d '"' -f4)
+          sed -n '/"body":/,$p' pr.json | sed '1s/.*"body": "//; s/",$//' > pr_body.md
+
+          echo "PR_NUMBER=$PR_NUMBER" >> $GITHUB_ENV
+          echo "PR_TITLE=$PR_TITLE" >> $GITHUB_ENV
+          echo "PR_URL=$PR_URL" >> $GITHUB_ENV
+
       - name: 📦 Extract released packages
         id: extract
         run: |
           REPO="https://github.com/${{ github.repository }}"
-          echo "${{ github.event.pull_request.body }}" > pr_body.md
-          # Extract all lines starting with '## '
           grep '^## ' pr_body.md | sed 's/^## //' > packages.txt
-          # Generate HTML list of links to releases
+
           while read -r line; do
-            ENCODED_TAG=$(echo "$line" | jq -sRr @uri)  # encode the tag for URL safety
+            ENCODED_TAG=$(printf "%s" "$line" | jq -sRr @uri)
             echo "  • <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
           done < packages.txt > release_links.html
+
           {
             echo "RELEASE_LINKS<<EOF"
             cat release_links.html
             echo "EOF"
           } >> "$GITHUB_ENV"
-          
 
       - name: 💬 Send Telegram Message
         uses: appleboy/telegram-action@master
@@ -107,8 +111,7 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: html
           message: |
-            🚀 <b><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></b> was just released!
-            ${{ env.RELEASE_LINKS }}
-
-            🔗 PR: <a href="${{ github.event.pull_request.html_url }}"><b>${{ github.event.pull_request.title }}</b>#${{ github.event.pull_request.number }}</a>
-
+            🚀 <b><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></b> was just released!\n
+            📦 <b>Released Packages:</b>\n
+            ${{ env.RELEASE_LINKS }}\n
+            🔗 PR: <a href="${{ env.PR_URL }}"><b>${{ env.PR_TITLE }}</b> #${{ env.PR_NUMBER }}</a>
