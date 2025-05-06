@@ -30,18 +30,28 @@ jobs:
         with:
           fetch-depth: 0
           
-      - name: send telegram message on push
+      - name: Extract PR Description
+        id: extract
+        run: |
+          BODY="${{ github.event.pull_request.body }}"
+          # Extract from '# Releases' onward
+          RELEASE_NOTES=$(echo "$BODY" | awk '/^# Releases/{flag=1} flag')
+          # Save it to an environment variable
+          echo "RELEASE_NOTES<<EOF" >> $GITHUB_ENV
+          echo "$RELEASE_NOTES" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      - name: Send Telegram Message
         uses: appleboy/telegram-action@master
         with:
           to: ${{ secrets.TELEGRAM_TO }}
           token: ${{ secrets.TELEGRAM_TOKEN }}
           message: |
-            ${{ github.actor }} created commit:
-            Commit message: ${{ github.event.commits[0].message }}
-            
-            Repository: ${{ github.repository }}
-            
-            See changes: https://github.com/${{ github.repository }}/commit/${{github.sha}}
+            🚀 New Changeset PR Created
+            🔗 PR: ${{ github.event.pull_request.html_url }}
+            👤 Author: ${{ github.actor }}
+            📦 Release Notes:
+            ${{ env.RELEASE_NOTES }}
 
       - name: "🔧 setup pnpm"
         uses: pnpm/action-setup@v3
