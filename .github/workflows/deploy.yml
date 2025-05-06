@@ -76,19 +76,38 @@ jobs:
         uses: actions/deploy-pages@v4
 
 
-  announcement:
-    name: 📣 Announcement
+  telegram-announcement:
+    name: 📣 Announcement on Telegram
     needs: build
-    uses: ./.github/workflows/announcement.yml
-    with:
-      pr_title: ${{ github.event.head_commit.message }}
-      pr_number: ${{ needs.changesets.outputs.pr }}
-      pr_url:
-        https://github.com/${{ github.repository }}/pull/${{
-        needs.changesets.outputs.pr }}
-      pr_body: |
-        ${{ github.event.head_commit.message }}
-    secrets:
-      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-      TELEGRAM_TO: ${{ secrets.TELEGRAM_TO }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📦 Extract released packages
+        id: extract
+        run: |
+          REPO="https://github.com/${{ github.repository }}"
+          echo "${{ github.event.pull_request.body }}" > pr_body.md
+          # Extract all lines starting with '## '
+          grep '^## ' pr_body.md | sed 's/^## //' > packages.txt
+          # Generate HTML list of links to releases
+          while read -r line; do
+            ENCODED_TAG=$(echo "$line" | jq -sRr @uri)  # encode the tag for URL safety
+            echo "  • <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
+          done < packages.txt > release_links.html
+          {
+            echo "RELEASE_LINKS<<EOF"
+            cat release_links.html
+            echo "EOF"
+          } >> "$GITHUB_ENV"
+
+      - name: 💬 Send Telegram Message
+        uses: appleboy/telegram-action@master
+        with:
+          to: ${{ secrets.TELEGRAM_TO }}
+          token: ${{ secrets.TELEGRAM_TOKEN }}
+          format: html
+          message: |
+            🚀 <b><a href="https://github.com/${{ github.repository }}">${{ github.repository }}</a></b> was just released!
+            ${{ env.RELEASE_LINKS }}
+
+            🔗 PR: <a href="${{ github.event.pull_request.html_url }}"><b>${{ github.event.pull_request.title }}</b>#${{ github.event.pull_request.number }}</a>
 
