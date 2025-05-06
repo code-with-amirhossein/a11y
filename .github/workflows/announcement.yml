@@ -16,8 +16,8 @@ jobs:
         run: |
           echo "${{ github.event.pull_request.body }}" > pr_body.md
 
-          # Extract lines from "# Releases" onward
-          awk '/^# Releases/ {found=1} found' pr_body.md > release_notes.txt
+          # Extract lines AFTER "# Releases"
+          awk '/^# Releases/ {found=1; next} found' pr_body.md > release_notes.txt
 
           # Escape characters for Telegram MarkdownV2
           sed -e 's/\([_*\[\]()~`>#+\-=|{}.!]\)/\\\1/g' release_notes.txt > sanitized_notes.txt
@@ -41,6 +41,4 @@ jobs:
             👤 Author: [${{ github.event.pull_request.user.login }}](https://github.com/${{ github.event.pull_request.user.login }})
 
             📦 *Release Notes:*
-            ```
-            ${{ env.RELEASE_NOTES }}
             ```
