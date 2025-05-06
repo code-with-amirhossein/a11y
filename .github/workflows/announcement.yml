@@ -23,7 +23,7 @@ jobs:
           # Generate HTML list of links to releases
           while read -r line; do
             ENCODED_TAG=$(echo "$line" | jq -sRr @uri)  # encode the tag for URL safety
-            echo "• <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
+            echo "  • <a href=\"$REPO/releases/tag/$ENCODED_TAG\">$line</a>"
           done < packages.txt > release_links.html
 
           {
@@ -39,7 +39,9 @@ jobs:
           token: ${{ secrets.TELEGRAM_TOKEN }}
           format: html
           message: |
-            🚀 <b>New Release for <a href="https://github.com/${{ github.repository }}">Design System</a>!</b>\n
-            🔗 <a href="${{ github.event.pull_request.html_url }}">View PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}</a>\n
-            📦 <b>Released Packages:</b>\n
+            🚀 <b>New Release for <a href="https://github.com/${{ github.repository }}">Design System</a>!</b>
+            
+            🔗 <a href="${{ github.event.pull_request.html_url }}">View PR #${{ github.event.pull_request.number }}: ${{ github.event.pull_request.title }}</a>
+            
+            📦 <b>Released Packages:</b>
             ${{ env.RELEASE_LINKS }}
